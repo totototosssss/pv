@@ -3,33 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stone Clicker Game</title>
+    <title>Stone Clicker Game Kai</title>
     <style>
         body {
             display: flex;
-            flex-direction: column; /* Stack items vertically */
+            flex-direction: column;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh; /* 画面全体に広がるように */
             margin: 0;
             background-color: #f0f0f0;
+            font-family: sans-serif;
+            text-align: center; /* テキストを中央揃えに */
+            padding: 20px; /* コンテンツが端にくっつかないように */
+            box-sizing: border-box; /* paddingを含めて幅計算 */
+        }
+        #instruction {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+        }
+        #clickCountParagraph {
+            font-size: 1.2em;
+            margin-bottom: 20px;
         }
         #stoneImage {
             cursor: pointer;
-            width: 200px; /* Adjust as needed */
+            width: 150px; /* 少し小さくして他の要素とのバランスをとる */
+            max-width: 80%; /* 画面幅が小さい場合でもはみ出さないように */
             height: auto;
             border: 2px solid black;
             border-radius: 10px;
+            margin-bottom: 20px; /* 画像と動画の間にスペース */
         }
         #myVideo {
             display: none; /* Hide video initially */
-            width: 80%; /* Adjust as needed */
-            max-width: 640px; /* Adjust as needed */
-            margin-top: 20px; /* Space between image and video */
+            width: 90%;
+            max-width: 640px;
+            margin-top: 10px; /* カウンターや画像からのマージン */
         }
     </style>
 </head>
 <body>
+
+    <p id="instruction">研一を100回タップして！</p>
+    <p id="clickCountParagraph">現在のカウント: <span id="clickCountDisplay">0</span> / 100</p>
 
     <img src="stone.png" id="stoneImage" alt="Click the Stone!">
 
@@ -41,20 +58,48 @@
     <script>
         const stoneImage = document.getElementById('stoneImage');
         const videoPlayer = document.getElementById('myVideo');
+        const clickCountDisplay = document.getElementById('clickCountDisplay');
+        const instructionText = document.getElementById('instruction'); // 指示テキストも変更できるように取得
+
+        let clicks = 0;
+        const clicksForVideo = 50;
+        const totalClicksGoal = 100;
+        let videoHasPlayed = false; // 動画が再生されたかどうかを追跡するフラグ
 
         stoneImage.addEventListener('click', function() {
-            console.log("Stone clicked!"); // For debugging
-            videoPlayer.style.display = 'block'; // Show the video
-            videoPlayer.volume = 1.0; // Set volume to maximum (100%)
-            videoPlayer.play()
-                .then(() => {
-                    console.log("Video started playing.");
-                })
-                .catch(error => {
-                    console.error("Error attempting to play video:", error);
-                    // Autoplay was prevented. You might need user interaction
-                    // specifically for the video element on some browsers.
-                });
+            if (clicks < totalClicksGoal) { // 100回まではカウントを増やす
+                clicks++;
+                clickCountDisplay.textContent = clicks;
+            }
+
+            // 50回に達し、かつ動画がまだ再生されていない場合
+            if (clicks >= clicksForVideo && !videoHasPlayed) {
+                console.log("50 Clicks reached! Playing video.");
+                videoPlayer.style.display = 'block'; // 動画を表示
+                videoPlayer.volume = 1.0;           // 音量を最大に
+                videoPlayer.play()
+                    .then(() => {
+                        console.log("Video started playing.");
+                        instructionText.textContent = "目標の半分達成！動画再生！ (続けて100回を目指そう！)";
+                    })
+                    .catch(error => {
+                        console.error("Error attempting to play video:", error);
+                        instructionText.textContent = "動画の再生に失敗しました。ブラウザの設定を確認してください。";
+                    });
+                videoHasPlayed = true; // 動画が再生されたことを記録
+            }
+
+            // 100回に達した場合のメッセージ
+            if (clicks >= totalClicksGoal) {
+                if (videoHasPlayed) { // 動画再生後のメッセージ
+                    instructionText.textContent = "100回達成！おめでとうございます！🎉";
+                } else { // (万が一50回で動画再生されなかった場合の保険)
+                    instructionText.textContent = "100回達成！ (動画は50回で再生のはずでした)";
+                }
+                // 100回超えたら石のクリックを無効にする場合 (オプション)
+                // stoneImage.style.pointerEvents = 'none';
+                // stoneImage.style.opacity = '0.5'; // 見た目も変えるなど
+            }
         });
     </script>
 
