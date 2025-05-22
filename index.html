@@ -3,20 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stone Clicker Game Kai</title>
+    <title>Stone Clicker Game - Fullscreen Blast</title>
     <style>
         body {
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            min-height: 100vh; /* 画面全体に広がるように */
+            min-height: 100vh;
             margin: 0;
             background-color: #f0f0f0;
             font-family: sans-serif;
-            text-align: center; /* テキストを中央揃えに */
-            padding: 20px; /* コンテンツが端にくっつかないように */
-            box-sizing: border-box; /* paddingを含めて幅計算 */
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+            transition: background-color 0.5s; /* 背景色の変化を滑らかに */
+        }
+        .content-wrapper { /* テキストと画像をまとめるコンテナ */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
         }
         #instruction {
             font-size: 1.5em;
@@ -28,30 +35,40 @@
         }
         #stoneImage {
             cursor: pointer;
-            width: 150px; /* 少し小さくして他の要素とのバランスをとる */
-            max-width: 80%; /* 画面幅が小さい場合でもはみ出さないように */
+            width: 150px;
+            max-width: 80%;
             height: auto;
             border: 2px solid black;
             border-radius: 10px;
-            margin-bottom: 20px; /* 画像と動画の間にスペース */
+            margin-bottom: 20px;
+            transition: opacity 0.3s, transform 0.3s; /* アニメーション効果 */
+        }
+        #stoneImage:hover {
+            opacity: 0.8;
+            transform: scale(1.05);
         }
         #myVideo {
-            display: none; /* Hide video initially */
-            width: 90%;
-            max-width: 640px;
-            margin-top: 10px; /* カウンターや画像からのマージン */
+            display: none; /* 最初は非表示 */
+            width: 90%;    /* フルスクリーンでない時のデフォルトサイズ */
+            max-width: 800px; /* フルスクリーンでない時の最大幅を少し大きく */
+            margin-top: 10px;
+            background-color: #000; /* フルスクリーン時に背景が黒になるように */
+        }
+        /* フルスクリーン時に他の要素を隠すためのクラス (JavaScriptで操作) */
+        .hidden {
+            display: none !important;
         }
     </style>
 </head>
 <body>
 
-    <p id="instruction">研一を100回タップして！</p>
-    <p id="clickCountParagraph">現在のカウント: <span id="clickCountDisplay">0</span> / 100</p>
+    <div id="contentWrapper" class="content-wrapper">
+        <p id="instruction">研一を100回タップして！</p>
+        <p id="clickCountParagraph">現在のカウント: <span id="clickCountDisplay">0</span> / 100</p>
+        <img src="stone.png" id="stoneImage" alt="Click the Stone!">
+    </div>
 
-    <img src="stone.png" id="stoneImage" alt="Click the Stone!">
-
-    <video id="myVideo" controls>
-        <source src="D4372235-B49A-41E0-B864-C3957B4F8A9E.mp4" type="video/mp4">
+    <video id="myVideo"> <source src="D4372235-B49A-41E0-B864-C3957B4F8A9E.mp4" type="video/mp4">
         Your browser does not support the video tag.
     </video>
 
@@ -59,49 +76,103 @@
         const stoneImage = document.getElementById('stoneImage');
         const videoPlayer = document.getElementById('myVideo');
         const clickCountDisplay = document.getElementById('clickCountDisplay');
-        const instructionText = document.getElementById('instruction'); // 指示テキストも変更できるように取得
+        const instructionText = document.getElementById('instruction');
+        const clickCountParagraph = document.getElementById('clickCountParagraph'); // カウンターの段落全体
+        const contentWrapper = document.getElementById('contentWrapper'); // テキストと画像をまとめるdiv
 
         let clicks = 0;
-        const clicksForVideo = 50;
+        const clicksForVideo = 30;
         const totalClicksGoal = 100;
-        let videoHasPlayed = false; // 動画が再生されたかどうかを追跡するフラグ
+        let videoHasPlayed = false;
 
         stoneImage.addEventListener('click', function() {
-            if (clicks < totalClicksGoal) { // 100回まではカウントを増やす
+            if (clicks < totalClicksGoal) {
                 clicks++;
                 clickCountDisplay.textContent = clicks;
             }
 
-            // 50回に達し、かつ動画がまだ再生されていない場合
             if (clicks >= clicksForVideo && !videoHasPlayed) {
-                console.log("50 Clicks reached! Playing video.");
-                videoPlayer.style.display = 'block'; // 動画を表示
-                videoPlayer.volume = 1.0;           // 音量を最大に
+                console.log("50 Clicks reached! Preparing video for fullscreen.");
+
+                // 他のコンテンツを非表示にする
+                contentWrapper.classList.add('hidden');
+
+                videoPlayer.style.display = 'block'; // 動画要素を表示状態にする
+                videoPlayer.volume = 1.0; // 音量を最大に (これ以上はプログラムでは不可)
+
+                // フルスクリーン表示を試みる
+                if (videoPlayer.requestFullscreen) {
+                    videoPlayer.requestFullscreen().catch(err => console.error("Error attempting fullscreen:", err));
+                } else if (videoPlayer.mozRequestFullScreen) { /* Firefox */
+                    videoPlayer.mozRequestFullScreen().catch(err => console.error("Error attempting fullscreen (Firefox):", err));
+                } else if (videoPlayer.webkitRequestFullscreen) { /* Chrome, Safari & Opera */
+                    videoPlayer.webkitRequestFullscreen().catch(err => console.error("Error attempting fullscreen (WebKit):", err));
+                } else if (videoPlayer.msRequestFullscreen) { /* IE/Edge */
+                    videoPlayer.msRequestFullscreen().catch(err => console.error("Error attempting fullscreen (MS):", err));
+                }
+
                 videoPlayer.play()
                     .then(() => {
                         console.log("Video started playing.");
-                        instructionText.textContent = "目標の半分達成！動画再生！ (続けて100回を目指そう！)";
+                        // フルスクリーンが成功した場合、このメッセージは見えない可能性が高い
+                        // instructionText.textContent = "動画再生中！"; // ページに残るテキストは更新できる
                     })
                     .catch(error => {
                         console.error("Error attempting to play video:", error);
-                        instructionText.textContent = "動画の再生に失敗しました。ブラウザの設定を確認してください。";
+                        // フルスクリーンに失敗しても、動画再生は試みられる
+                        // エラー時やフルスクリーン解除時にコンテンツを戻す処理が必要な場合がある
+                        contentWrapper.classList.remove('hidden'); // エラーなら元に戻す
+                        instructionText.textContent = "動画の再生に失敗しました。";
                     });
-                videoHasPlayed = true; // 動画が再生されたことを記録
+                videoHasPlayed = true;
             }
 
-            // 100回に達した場合のメッセージ
-            if (clicks >= totalClicksGoal) {
-                if (videoHasPlayed) { // 動画再生後のメッセージ
-                    instructionText.textContent = "100回達成！おめでとうございます！🎉";
-                } else { // (万が一50回で動画再生されなかった場合の保険)
-                    instructionText.textContent = "100回達成！ (動画は50回で再生のはずでした)";
-                }
-                // 100回超えたら石のクリックを無効にする場合 (オプション)
-                // stoneImage.style.pointerEvents = 'none';
-                // stoneImage.style.opacity = '0.5'; // 見た目も変えるなど
+            if (clicks >= totalClicksGoal && videoHasPlayed) { // 動画再生後に100回達成
+                // フルスクリーン中は見えないが、フルスクリーン解除後や
+                // フルスクリーンにならなかった場合にこのメッセージが表示される
+                instructionText.textContent = "100回達成！おめでとうございます！🎉";
+                clickCountParagraph.textContent = "素晴らしい！"; // カウンター表示も変えるなど
+                contentWrapper.classList.remove('hidden'); // 100回達成でコンテンツ再表示
+                videoPlayer.style.display = 'none'; // 動画は隠すなど、ゲームの終わりに合わせて調整
+            } else if (clicks >= totalClicksGoal && !videoHasPlayed) { // (ほぼないはずだが)動画再生前に100回
+                 instructionText.textContent = "100回達成！ (動画は50回で再生のはずでした)";
+                 contentWrapper.classList.remove('hidden');
             }
         });
-    </script>
 
-</body>
-</html>
+        // フルスクリーン状態の変更を監視
+        function handleFullscreenChange() {
+            if (!document.fullscreenElement && !document.webkitIsFullScreen && !document.mozFullScreen && !document.msFullscreenElement) {
+                console.log("Exited fullscreen mode.");
+                // フルスクリーンが解除されたら、元のコンテンツを表示状態に戻す
+                // (ただし、ゲームの進行状況によっては表示したままが良い場合もある)
+                if (videoHasPlayed && clicks < totalClicksGoal) {
+                     contentWrapper.classList.remove('hidden');
+                     instructionText.textContent = "動画終了。続けて100回を目指そう！";
+                } else if (clicks >= totalClicksGoal) {
+                    contentWrapper.classList.remove('hidden'); // 既に100回達成時のメッセージが表示されているはず
+                }
+                // 動画の再生を停止したり、表示を制御したりすることも可能
+                // videoPlayer.pause();
+                // videoPlayer.style.display = 'none';
+            }
+        }
+
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+        document.addEventListener('webkitfullscreenchange', handleFullscreenChange); // Chrome, Safari, Opera
+        document.addEventListener('mozfullscreenchange', handleFullscreenChange);    // Firefox
+        document.addEventListener('MSFullscreenChange', handleFullscreenChange);      // IE/Edge
+
+        // 動画が終了したときのイベント
+        videoPlayer.addEventListener('ended', () => {
+            console.log("Video has ended.");
+            if (document.fullscreenElement || document.webkitIsFullScreen || document.mozFullScreen || document.msFullscreenElement) {
+                document.exitFullscreen().catch(err => console.log(err)); // フルスクリーンを終了
+            }
+            // フルスクリーン解除後の処理は handleFullscreenChange で行われる
+            // ここで明示的にコンテンツを再表示しても良い
+            contentWrapper.classList.remove('hidden');
+            if (clicks < totalClicksGoal) {
+                instructionText.textContent = "動画終了。続けて100回を目指そう！";
+            } else {
+                instructionText.textContent = "10
