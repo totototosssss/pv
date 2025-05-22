@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stone Clicker Game - Fullscreen Blast</title>
+    <title>Stone Clicker Game - Debug</title>
     <style>
         body {
             display: flex;
@@ -17,9 +17,9 @@
             text-align: center;
             padding: 20px;
             box-sizing: border-box;
-            transition: background-color 0.5s; /* 背景色の変化を滑らかに */
+            transition: background-color 0.5s;
         }
-        .content-wrapper { /* テキストと画像をまとめるコンテナ */
+        .content-wrapper {
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -41,20 +41,19 @@
             border: 2px solid black;
             border-radius: 10px;
             margin-bottom: 20px;
-            transition: opacity 0.3s, transform 0.3s; /* アニメーション効果 */
+            transition: opacity 0.3s, transform 0.3s;
         }
         #stoneImage:hover {
             opacity: 0.8;
             transform: scale(1.05);
         }
         #myVideo {
-            display: none; /* 最初は非表示 */
-            width: 90%;    /* フルスクリーンでない時のデフォルトサイズ */
-            max-width: 800px; /* フルスクリーンでない時の最大幅を少し大きく */
+            display: none;
+            width: 90%;
+            max-width: 800px;
             margin-top: 10px;
-            background-color: #000; /* フルスクリーン時に背景が黒になるように */
+            background-color: #000;
         }
-        /* フルスクリーン時に他の要素を隠すためのクラス (JavaScriptで操作) */
         .hidden {
             display: none !important;
         }
@@ -68,7 +67,8 @@
         <img src="stone.png" id="stoneImage" alt="Click the Stone!">
     </div>
 
-    <video id="myVideo"> <source src="D4372235-B49A-41E0-B864-C3957B4F8A9E.mp4" type="video/mp4">
+    <video id="myVideo">
+        <source src="D4372235-B49A-41E0-B864-C3957B4F8A9E.mp4" type="video/mp4">
         Your browser does not support the video tag.
     </video>
 
@@ -77,8 +77,8 @@
         const videoPlayer = document.getElementById('myVideo');
         const clickCountDisplay = document.getElementById('clickCountDisplay');
         const instructionText = document.getElementById('instruction');
-        const clickCountParagraph = document.getElementById('clickCountParagraph'); // カウンターの段落全体
-        const contentWrapper = document.getElementById('contentWrapper'); // テキストと画像をまとめるdiv
+        const clickCountParagraph = document.getElementById('clickCountParagraph');
+        const contentWrapper = document.getElementById('contentWrapper');
 
         let clicks = 0;
         const clicksForVideo = 30;
@@ -86,93 +86,119 @@
         let videoHasPlayed = false;
 
         stoneImage.addEventListener('click', function() {
+            console.log("LOG: Stone clicked. Current clicks variable:", clicks); // クリック時の内部カウント確認
+
             if (clicks < totalClicksGoal) {
                 clicks++;
                 clickCountDisplay.textContent = clicks;
+                console.log("LOG: Counter updated to:", clicks);
+            } else {
+                console.log("LOG: Max clicks (100) reached or exceeded. Not incrementing.");
             }
 
             if (clicks >= clicksForVideo && !videoHasPlayed) {
-                console.log("50 Clicks reached! Preparing video for fullscreen.");
-
-                // 他のコンテンツを非表示にする
+                console.log("LOG: 50 Clicks. Hiding contentWrapper. Preparing video.");
                 contentWrapper.classList.add('hidden');
 
-                videoPlayer.style.display = 'block'; // 動画要素を表示状態にする
-                videoPlayer.volume = 1.0; // 音量を最大に (これ以上はプログラムでは不可)
+                videoPlayer.style.display = 'block';
+                videoPlayer.volume = 1.0;
 
-                // フルスクリーン表示を試みる
                 if (videoPlayer.requestFullscreen) {
-                    videoPlayer.requestFullscreen().catch(err => console.error("Error attempting fullscreen:", err));
-                } else if (videoPlayer.mozRequestFullScreen) { /* Firefox */
+                    videoPlayer.requestFullscreen().catch(err => {
+                        console.error("Error attempting fullscreen:", err);
+                        // フルスクリーン失敗時もコンテンツを戻すか検討
+                        // contentWrapper.classList.remove('hidden'); // 必要ならここでも表示を戻す
+                    });
+                } else if (videoPlayer.mozRequestFullScreen) {
                     videoPlayer.mozRequestFullScreen().catch(err => console.error("Error attempting fullscreen (Firefox):", err));
-                } else if (videoPlayer.webkitRequestFullscreen) { /* Chrome, Safari & Opera */
+                } else if (videoPlayer.webkitRequestFullscreen) {
                     videoPlayer.webkitRequestFullscreen().catch(err => console.error("Error attempting fullscreen (WebKit):", err));
-                } else if (videoPlayer.msRequestFullscreen) { /* IE/Edge */
+                } else if (videoPlayer.msRequestFullscreen) {
                     videoPlayer.msRequestFullscreen().catch(err => console.error("Error attempting fullscreen (MS):", err));
                 }
 
                 videoPlayer.play()
                     .then(() => {
-                        console.log("Video started playing.");
-                        // フルスクリーンが成功した場合、このメッセージは見えない可能性が高い
-                        // instructionText.textContent = "動画再生中！"; // ページに残るテキストは更新できる
+                        console.log("LOG: Video started playing.");
                     })
                     .catch(error => {
                         console.error("Error attempting to play video:", error);
-                        // フルスクリーンに失敗しても、動画再生は試みられる
-                        // エラー時やフルスクリーン解除時にコンテンツを戻す処理が必要な場合がある
-                        contentWrapper.classList.remove('hidden'); // エラーなら元に戻す
+                        // 動画再生エラーの場合、コンテンツを再表示
+                        console.log("LOG: Video play error. Removing 'hidden' from contentWrapper.");
+                        contentWrapper.classList.remove('hidden');
                         instructionText.textContent = "動画の再生に失敗しました。";
                     });
                 videoHasPlayed = true;
             }
 
-            if (clicks >= totalClicksGoal && videoHasPlayed) { // 動画再生後に100回達成
-                // フルスクリーン中は見えないが、フルスクリーン解除後や
-                // フルスクリーンにならなかった場合にこのメッセージが表示される
+            // 100回達成時のメッセージ (動画再生後)
+            if (clicks >= totalClicksGoal && videoHasPlayed) {
                 instructionText.textContent = "100回達成！おめでとうございます！🎉";
-                clickCountParagraph.textContent = "素晴らしい！"; // カウンター表示も変えるなど
-                contentWrapper.classList.remove('hidden'); // 100回達成でコンテンツ再表示
-                videoPlayer.style.display = 'none'; // 動画は隠すなど、ゲームの終わりに合わせて調整
-            } else if (clicks >= totalClicksGoal && !videoHasPlayed) { // (ほぼないはずだが)動画再生前に100回
+                // カウンター行全体を書き換えるのは、これが最終状態の場合のみ推奨
+                clickCountParagraph.textContent = "素晴らしい！";
+                console.log("LOG: 100 clicks and video played. Final message set.");
+                if (contentWrapper.classList.contains('hidden')) {
+                    console.log("LOG: 100 clicks. Removing 'hidden' from contentWrapper.");
+                    contentWrapper.classList.remove('hidden'); // 念のため再表示
+                }
+                videoPlayer.style.display = 'none'; // 100回で動画は隠す
+            } else if (clicks >= totalClicksGoal && !videoHasPlayed) { // (動画再生前に100回に到達した場合 - 通常は起こりにくい)
                  instructionText.textContent = "100回達成！ (動画は50回で再生のはずでした)";
-                 contentWrapper.classList.remove('hidden');
+                 if (contentWrapper.classList.contains('hidden')) {
+                    contentWrapper.classList.remove('hidden');
+                 }
             }
         });
 
-        // フルスクリーン状態の変更を監視
         function handleFullscreenChange() {
             if (!document.fullscreenElement && !document.webkitIsFullScreen && !document.mozFullScreen && !document.msFullscreenElement) {
-                console.log("Exited fullscreen mode.");
-                // フルスクリーンが解除されたら、元のコンテンツを表示状態に戻す
-                // (ただし、ゲームの進行状況によっては表示したままが良い場合もある)
-                if (videoHasPlayed && clicks < totalClicksGoal) {
+                console.log("LOG: Exited fullscreen mode.");
+                // フルスクリーン解除時にコンテンツを再表示（動画が終わってない場合もある）
+                if (!contentWrapper.classList.contains('hidden') && videoPlayer.paused && videoHasPlayed) {
+                    //既に表示されていて、ビデオが一時停止などしている場合は何もしないか、状況に応じた処理
+                } else if (contentWrapper.classList.contains('hidden')) {
+                     console.log("LOG: Exited fullscreen. Removing 'hidden' from contentWrapper.");
                      contentWrapper.classList.remove('hidden');
+                }
+
+                if (videoHasPlayed && clicks < totalClicksGoal) {
                      instructionText.textContent = "動画終了。続けて100回を目指そう！";
                 } else if (clicks >= totalClicksGoal) {
-                    contentWrapper.classList.remove('hidden'); // 既に100回達成時のメッセージが表示されているはず
+                    // 100回達成時のメッセージはクリックハンドラで設定されるので、ここでは重複させないか、
+                    // instructionText.textContent = "100回達成！おめでとうございます！🎉";
+                    // clickCountParagraph.textContent = "素晴らしい！";
                 }
-                // 動画の再生を停止したり、表示を制御したりすることも可能
-                // videoPlayer.pause();
-                // videoPlayer.style.display = 'none';
+            } else {
+                console.log("LOG: Entered fullscreen mode.");
             }
         }
 
         document.addEventListener('fullscreenchange', handleFullscreenChange);
-        document.addEventListener('webkitfullscreenchange', handleFullscreenChange); // Chrome, Safari, Opera
-        document.addEventListener('mozfullscreenchange', handleFullscreenChange);    // Firefox
-        document.addEventListener('MSFullscreenChange', handleFullscreenChange);      // IE/Edge
+        document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+        document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+        document.addEventListener('MSFullscreenChange', handleFullscreenChange);
 
-        // 動画が終了したときのイベント
         videoPlayer.addEventListener('ended', () => {
-            console.log("Video has ended.");
+            console.log("LOG: Video has ended.");
             if (document.fullscreenElement || document.webkitIsFullScreen || document.mozFullScreen || document.msFullscreenElement) {
-                document.exitFullscreen().catch(err => console.log(err)); // フルスクリーンを終了
+                document.exitFullscreen().catch(err => console.log("LOG: Error exiting fullscreen on video end:",err));
             }
-            // フルスクリーン解除後の処理は handleFullscreenChange で行われる
-            // ここで明示的にコンテンツを再表示しても良い
-            contentWrapper.classList.remove('hidden');
+            
+            // 動画終了時にコンテンツを確実に再表示
+            if (contentWrapper.classList.contains('hidden')) {
+                console.log("LOG: Video ended. Removing 'hidden' from contentWrapper.");
+                contentWrapper.classList.remove('hidden');
+            }
+
             if (clicks < totalClicksGoal) {
                 instructionText.textContent = "動画終了。続けて100回を目指そう！";
-            } else {
-                instructionText.textContent = "10
+            } else { // 100回達成済みで動画終了
+                instructionText.textContent = "100回達成！お疲れ様でした！";
+                clickCountParagraph.textContent = "素晴らしい！"; // ここでもカウンター行を最終形に
+            }
+            videoPlayer.style.display = 'none'; // 動画を非表示にする
+        });
+    </script>
+
+</body>
+</html>
