@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stone Clicker Game</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column; /* Stack items vertically */
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        #stoneImage {
+            cursor: pointer;
+            width: 200px; /* Adjust as needed */
+            height: auto;
+            border: 2px solid black;
+            border-radius: 10px;
+        }
+        #myVideo {
+            display: none; /* Hide video initially */
+            width: 80%; /* Adjust as needed */
+            max-width: 640px; /* Adjust as needed */
+            margin-top: 20px; /* Space between image and video */
+        }
+    </style>
+</head>
+<body>
+
+    <img src="stone.png" id="stoneImage" alt="Click the Stone!">
+
+    <video id="myVideo" controls>
+        <source src="D4372235-B49A-41E0-B864-C3957B4F8A9E.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+
+    <script>
+        const stoneImage = document.getElementById('stoneImage');
+        const videoPlayer = document.getElementById('myVideo');
+
+        stoneImage.addEventListener('click', function() {
+            console.log("Stone clicked!"); // For debugging
+            videoPlayer.style.display = 'block'; // Show the video
+            videoPlayer.volume = 1.0; // Set volume to maximum (100%)
+            videoPlayer.play()
+                .then(() => {
+                    console.log("Video started playing.");
+                })
+                .catch(error => {
+                    console.error("Error attempting to play video:", error);
+                    // Autoplay was prevented. You might need user interaction
+                    // specifically for the video element on some browsers.
+                });
+        });
+    </script>
+
+</body>
+</html>
